@@ -148,10 +148,12 @@ una cuenta de GitHub. Para que Terraform pueda actuar en tu nombre, ejecuta una 
 
    | Rol | Para qué |
    |---|---|
-   | `roles/viewer` | Leer la configuración de tu infraestructura (no los valores de tus secretos) |
+   | `roles/viewer` | Leer la configuración de tu infraestructura y tu *state* |
    | `roles/resourcemanager.projectDeleter` | Borrar el proyecto al terminar la evaluación |
 
-   No debes darle ningún otro permiso, y en particular **no** acceso a los valores de tus secretos.
+   No debes darle ningún otro permiso; en particular, **no** el rol para leer secretos en Secret Manager.
+   Ten presente que el *state* de Terraform puede contener los valores que Terraform genera, y que quien
+   lo lee los ve: por eso el bucket del state nunca debe ser público.
 6. **Completar `ENTREGA.yaml`** con el ID de tu proyecto y la URL pública del frontend.
 
 Tu proyecto tiene que **funcionar**: se podrán crear enlaces desde el frontend, abrirlos y ver sus clics.
