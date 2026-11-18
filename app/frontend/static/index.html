@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Acortador de enlaces</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --card: #ffffff; --text: #1b1f24; --muted: #5d6673;
+    --line: #dfe3e8; --accent: #1a56db; --accent-text: #ffffff; --danger: #b42318; --ok: #067647;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1216; --card: #181c22; --text: #e8ebef; --muted: #98a2b0;
+      --line: #2b323b; --accent: #6b9cff; --accent-text: #0f1216; --danger: #ff8a80; --ok: #5fd39a;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 24px 16px; background: var(--bg); color: var(--text);
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 760px; margin: 0 auto; display: grid; gap: 16px; }
+  h1 { font-size: 1.5rem; margin: 0 0 4px; }
+  p.sub { margin: 0; color: var(--muted); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+  label { display: block; font-size: .875rem; color: var(--muted); margin-bottom: 6px; }
+  .row { display: flex; gap: 8px; }
+  input {
+    flex: 1; min-width: 0; padding: 10px 12px; font: inherit; color: var(--text);
+    background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
+  }
+  input:focus-visible, button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button {
+    padding: 10px 16px; font: inherit; font-weight: 600; cursor: pointer;
+    color: var(--accent-text); background: var(--accent); border: 0; border-radius: 8px;
+  }
+  button.secondary { color: var(--text); background: transparent; border: 1px solid var(--line); font-weight: 500; }
+  button:disabled { opacity: .6; cursor: default; }
+  .msg { min-height: 1.4em; margin: 10px 0 0; font-size: .9rem; }
+  .msg.error { color: var(--danger); }
+  .msg.ok { color: var(--ok); }
+  .result { display: none; align-items: center; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .result a { font-weight: 600; color: var(--accent); word-break: break-all; }
+  .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .head h2 { font-size: 1.05rem; margin: 0; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 500; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  td a { color: var(--accent); }
+  td.dest { word-break: break-all; max-width: 280px; }
+  .empty { color: var(--muted); padding: 12px 0 4px; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Acortador de enlaces</h1>
+    <p class="sub">Pega una URL larga, obtén un enlace corto y mira cuántos clics recibe.</p>
+  </header>
+
+  <section class="card" aria-labelledby="new-title">
+    <label id="new-title" for="url">URL a acortar</label>
+    <form id="form" class="row">
+      <input id="url" type="url" required placeholder="https://ejemplo.com/una/direccion/muy/larga">
+      <button id="submit" type="submit">Acortar</button>
+    </form>
+    <p id="formmsg" class="msg" role="status"></p>
+    <div id="result" class="result">
+      <a id="short" target="_blank" rel="noopener"></a>
+      <button id="copy" class="secondary" type="button">Copiar</button>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="list-title">
+    <div class="head">
+      <h2 id="list-title">Tus enlaces</h2>
+      <button id="refresh" class="secondary" type="button">Actualizar</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Enlace corto</th><th>Destino</th><th class="num">Clics</th><th>Creado</th></tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <p id="empty" class="empty" hidden>Todavía no hay enlaces.</p>
+    <p id="listmsg" class="msg" role="status"></p>
+  </section>
+</main>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+
+  function say(id, text, kind) {
+    const el = $(id);
+    el.textContent = text || "";
+    el.className = "msg" + (kind ? " " + kind : "");
+  }
+  const JSON_HEADERS = { "content-type": "application/json" };
+  function shortUrl(code) { return location.origin + "/" + code; }
+
+  async function loadLinks() {
+    say("listmsg", "");
+    try {
+      const res = await fetch("/api/links");
+      if (!res.ok) { say("listmsg", "No se pudo cargar la lista (" + res.status + ").", "error"); return; }
+      const links = await res.json();
+      const rows = $("rows");
+      rows.replaceChildren();
+      $("empty").hidden = links.length > 0;
+      for (const l of links) {
+        const tr = document.createElement("tr");
+        const a = document.createElement("a");
+        a.href = shortUrl(l.code); a.target = "_blank"; a.rel = "noopener"; a.textContent = "/" + l.code;
+        const tdShort = document.createElement("td"); tdShort.append(a);
+        const tdDest = document.createElement("td"); tdDest.className = "dest"; tdDest.textContent = l.url;
+        const tdClicks = document.createElement("td"); tdClicks.className = "num"; tdClicks.textContent = l.clicks;
+        const tdDate = document.createElement("td");
+        tdDate.textContent = new Date(l.created_at).toLocaleString("es", { dateStyle: "short", timeStyle: "short" });
+        tr.append(tdShort, tdDest, tdClicks, tdDate);
+        rows.append(tr);
+      }
+    } catch (e) {
+      say("listmsg", "No se pudo conectar con el servidor.", "error");
+    }
+  }
+
+  $("form").addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    say("formmsg", "");
+    $("result").style.display = "none";
+    const btn = $("submit");
+    btn.disabled = true;
+    try {
+      const res = await fetch("/api/links", {
+        method: "POST", headers: JSON_HEADERS, body: JSON.stringify({ url: $("url").value.trim() }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        say("formmsg", typeof body.detail === "string" ? body.detail : "No se pudo crear el enlace.", "error");
+        return;
+      }
+      const { code } = await res.json();
+      const link = shortUrl(code);
+      $("short").href = link; $("short").textContent = link;
+      $("result").style.display = "flex";
+      say("formmsg", "Enlace creado.", "ok");
+      $("url").value = "";
+      loadLinks();
+    } catch (e) {
+      say("formmsg", "No se pudo conectar con el servidor.", "error");
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  $("copy").addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText($("short").href);
+      say("formmsg", "Copiado.", "ok");
+    } catch (e) {
+      say("formmsg", "No se pudo copiar; selecciónalo a mano.", "error");
+    }
+  });
+
+  $("refresh").addEventListener("click", loadLinks);
+
+  loadLinks();
+</script>
+</body>
+</html>

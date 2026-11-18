@@ -1,0 +1,5 @@
+# Completa este archivo y déjalo en la raíz de tu repositorio.
+# El autocalificador lo lee para encontrar tu despliegue.
+
+project_id: ""      # ID del proyecto de Google Cloud donde lo desplegaste
+frontend_url: ""    # URL pública del frontend (la que abre una persona en el navegador)
