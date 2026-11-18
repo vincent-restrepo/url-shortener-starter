@@ -8,8 +8,8 @@ from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 
 # TODO: esto no debería estar aquí
-DB_PASSWORD = "Qm7vX2pL9tRk4Wn8Zb3Y"
-SHARED_SECRET = "sk_shared_7Hq2LmX9vPz4Rt8WbN3c"
+DB_PASSWORD = os.environ.get("DB_PASSWORD", "Qm7vX2pL9tRk4Wn8Zb3Y")
+SHARED_SECRET = os.environ.get("SHARED_SECRET", "sk_shared_7Hq2LmX9vPz4Rt8WbN3c")
 
 DB_HOST = os.environ.get("DB_HOST", "localhost")
 DB_NAME = os.environ.get("DB_NAME", "shortener")
