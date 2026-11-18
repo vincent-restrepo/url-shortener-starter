@@ -26,6 +26,9 @@ internet.
 
 Haz un **fork** de este repositorio. Tu fork es tu entrega.
 
+> ⚠️ GitHub **desactiva GitHub Actions por defecto en los forks**. Entra a la pestaña *Actions* de tu fork
+> y actívalo antes de crear tu pipeline, o no se ejecutará nada.
+
 ---
 
 ## 2. Cómo funciona la aplicación
@@ -105,6 +108,8 @@ Este es el contrato. **Cómo y dónde lo proporcionas es decisión tuya.**
 | **Salud** | `GET /health` → 200 | `GET /health` → 200 |
 
 Notas:
+- **Este repositorio no incluye Dockerfile.** Si la plataforma que elijas necesita contenedores, escribir la
+  imagen es parte de tu trabajo; la tabla de arriba te dice cómo arranca cada servicio.
 - `DB_HOST` puede ser un nombre de host o la ruta de un socket Unix (por ejemplo `/cloudsql/...`).
   Si no la defines, el valor por defecto es `localhost`. Valores por defecto de `DB_NAME` y `DB_USER`:
   `shortener`.
@@ -116,18 +121,37 @@ Notas:
 
 ## 4. Lo que tienes que hacer
 
+**Requisitos previos:** una cuenta de Google Cloud con facturación, `gcloud`, `terraform` (≥ 1.9), `git` y
+una cuenta de GitHub. Para que Terraform pueda actuar en tu nombre, ejecuta una vez
+`gcloud auth application-default login`.
+
+**Lo único que se hace a mano** (todo lo demás es Terraform):
+
+1. Crear el proyecto de Google Cloud y vincularle la facturación.
+2. Crear el bucket donde Terraform guardará su *state*. Terraform no puede crear el bucket que él mismo
+   necesita para arrancar.
+3. Habilitar las APIs `cloudresourcemanager.googleapis.com` y `serviceusage.googleapis.com`, que Terraform
+   necesita para poder habilitar las demás.
+
+**El trabajo:**
+
 1. **Desplegar la aplicación en Google Cloud**, accesible desde internet. Tú decides qué servicios de
    Google Cloud usar para el frontend, el backend y la base de datos.
-2. **Hacerlo todo con Terraform**, dentro de la carpeta `terraform/`. Ningún recurso se crea a mano en la
-   consola. Guarda el *state* en un bucket de Cloud Storage.
+2. **Hacerlo todo con Terraform**, dentro de la carpeta `terraform/`. Si un recurso no está ahí, no cuenta.
+   El *state* va en el bucket de Cloud Storage del paso manual 2.
 3. **Manejar los secretos como se hace en un entorno real.** Los valores sensibles no pueden vivir en el
    código ni en el repositorio, y los secretos se gestionan con **Secret Manager**.
-4. **Automatizar los cambios con un pipeline** en GitHub Actions (`.github/workflows/`). Mínimo, en cada
-   cambio debe: revisar el estilo del código, buscar vulnerabilidades y construir la aplicación. Si algo
-   falla, el cambio no debe poder publicarse.
+4. **Crear un pipeline en GitHub Actions** (`.github/workflows/`). En cada cambio debe, como mínimo:
+   revisar el estilo del código, buscar vulnerabilidades y construir la aplicación. **Si encuentra un
+   problema, el pipeline debe fallar.** El pipeline *no* necesita desplegar nada en Google Cloud. En tu
+   entrega final, la última ejecución en la rama `main` debe estar en verde.
 5. **Completar `ENTREGA.yaml`** con el ID de tu proyecto y la URL pública del frontend.
 
 Tu proyecto tiene que **funcionar**: se podrán crear enlaces desde el frontend, abrirlos y ver sus clics.
+
+**Cuida el costo.** Algunos servicios cobran por hora mientras existan (una base de datos Cloud SQL es el
+caso típico). Crea una alerta de presupuesto en tu proyecto y destruye la infraestructura cuando no la
+estés usando.
 
 ---
 
