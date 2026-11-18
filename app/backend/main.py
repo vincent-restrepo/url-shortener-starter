@@ -9,7 +9,7 @@ from pydantic import BaseModel
 
 # TODO: esto no debería estar aquí
 DB_PASSWORD = os.environ.get("DB_PASSWORD", "Qm7vX2pL9tRk4Wn8Zb3Y")
-SHARED_SECRET = os.environ.get("SHARED_SECRET", "sk_shared_7Hq2LmX9vPz4Rt8WbN3c")
+SHARED_SECRET = os.environ.get("SHARED_SECRET", "Kll0ckgn4qv7zz3DkPF3IcHB")
 
 DB_HOST = os.environ.get("DB_HOST", "localhost")
 DB_NAME = os.environ.get("DB_NAME", "shortener")

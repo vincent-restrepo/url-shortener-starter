@@ -125,13 +125,11 @@ Notas:
 una cuenta de GitHub. Para que Terraform pueda actuar en tu nombre, ejecuta una vez
 `gcloud auth application-default login`.
 
-**Lo único que se hace a mano** (todo lo demás es Terraform):
+**Lo único que se hace a mano** (todo lo demás, incluido habilitar las APIs, es Terraform):
 
 1. Crear el proyecto de Google Cloud y vincularle la facturación.
 2. Crear el bucket donde Terraform guardará su *state*. Terraform no puede crear el bucket que él mismo
    necesita para arrancar.
-3. Habilitar las APIs `cloudresourcemanager.googleapis.com` y `serviceusage.googleapis.com`, que Terraform
-   necesita para poder habilitar las demás.
 
 **El trabajo:**
 

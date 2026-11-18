@@ -7,7 +7,7 @@ from fastapi import FastAPI, Request, Response
 from fastapi.responses import FileResponse
 
 # TODO: esto no debería estar aquí
-SHARED_SECRET = os.environ.get("SHARED_SECRET", "sk_shared_7Hq2LmX9vPz4Rt8WbN3c")
+SHARED_SECRET = os.environ.get("SHARED_SECRET", "Kll0ckgn4qv7zz3DkPF3IcHB")
 BACKEND_URL = os.environ["BACKEND_URL"].rstrip("/")
 
 STATIC_DIR = Path(__file__).parent / "static"
