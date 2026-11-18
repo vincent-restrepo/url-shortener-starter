@@ -145,7 +145,16 @@ una cuenta de GitHub. Para que Terraform pueda actuar en tu nombre, ejecuta una 
    revisar el estilo del código, buscar vulnerabilidades y construir la aplicación. **Si encuentra un
    problema, el pipeline debe fallar.** El pipeline *no* necesita desplegar nada en Google Cloud. En tu
    entrega final, la última ejecución en la rama `main` debe estar en verde.
-5. **Completar `ENTREGA.yaml`** con el ID de tu proyecto y la URL pública del frontend.
+5. **Darle acceso al evaluador, también con Terraform.** Para poder revisar tu despliegue y destruirlo al
+   terminar, la cuenta `vdrestrepot@unal.edu.co` debe tener estos roles sobre tu proyecto:
+
+   | Rol | Para qué |
+   |---|---|
+   | `roles/viewer` | Leer la configuración de tu infraestructura (no los valores de tus secretos) |
+   | `roles/resourcemanager.projectDeleter` | Borrar el proyecto al terminar la evaluación |
+
+   No debes darle ningún otro permiso, y en particular **no** acceso a los valores de tus secretos.
+6. **Completar `ENTREGA.yaml`** con el ID de tu proyecto y la URL pública del frontend.
 
 Tu proyecto tiene que **funcionar**: se podrán crear enlaces desde el frontend, abrirlos y ver sus clics.
 
