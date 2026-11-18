@@ -143,17 +143,7 @@ una cuenta de GitHub. Para que Terraform pueda actuar en tu nombre, ejecuta una 
    revisar el estilo del código, buscar vulnerabilidades y construir la aplicación. **Si encuentra un
    problema, el pipeline debe fallar.** El pipeline *no* necesita desplegar nada en Google Cloud. En tu
    entrega final, la última ejecución en la rama `main` debe estar en verde.
-5. **Darle acceso al evaluador, también con Terraform.** Para poder revisar tu despliegue y destruirlo al
-   terminar, la cuenta `vdrestrepot@unal.edu.co` debe tener estos roles sobre tu proyecto:
-
-   | Rol | Para qué |
-   |---|---|
-   | `roles/viewer` | Leer la configuración de tu infraestructura y tu *state* |
-   | `roles/resourcemanager.projectDeleter` | Borrar el proyecto al terminar la evaluación |
-
-   No debes darle ningún otro permiso; en particular, **no** el rol para leer secretos en Secret Manager.
-   Ten presente que el *state* de Terraform puede contener los valores que Terraform genera, y que quien
-   lo lee los ve: por eso el bucket del state nunca debe ser público.
+5. **Darle acceso al evaluador, también con Terraform.** Es obligatorio y tiene su propia sección: la 5.
 6. **Completar `ENTREGA.yaml`** con el ID de tu proyecto y la URL pública del frontend.
 
 Tu proyecto tiene que **funcionar**: se podrán crear enlaces desde el frontend, abrirlos y ver sus clics.
@@ -164,7 +154,55 @@ estés usando.
 
 ---
 
-## 5. Correrlo en tu máquina
+## 5. Dar acceso al evaluador (obligatorio)
+
+Para poder calificar tu despliegue y destruirlo al terminar, el evaluador necesita entrar a **tu proyecto de
+Google Cloud**. Eres tú quien se lo concede, **con Terraform** y dentro de la carpeta `terraform/`.
+
+**La cuenta del evaluador** (cópiala, no la teclees):
+
+```text
+vdrestrepot@unal.edu.co
+```
+
+En IAM se escribe como miembro de tipo usuario: `user:vdrestrepot@unal.edu.co`.
+
+**Los roles que debes concederle, y solo estos dos:**
+
+| Rol | Para qué lo necesita |
+|---|---|
+| `roles/viewer` | Leer la configuración de tu infraestructura y tu *state*, para comprobar lo que hiciste. |
+| `roles/resourcemanager.projectDeleter` | Borrar el proyecto completo cuando termine la evaluación. |
+
+**Lo que NO debes darle:**
+
+- Ningún otro rol, y menos `roles/owner` o `roles/editor`.
+- Acceso para leer secretos en Secret Manager (`roles/secretmanager.secretAccessor`). El evaluador comprueba
+  que tus secretos existen y tienen valor, pero **nunca necesita leerlos**.
+
+> **Sobre el *state*.** `roles/viewer` permite leer el bucket donde está tu *state*, y el *state* de Terraform
+> puede guardar en texto plano los valores que Terraform genera (contraseñas, por ejemplo). Por eso el bucket
+> del *state* nunca debe ser público, y por eso es importante entender qué guarda cada recurso.
+
+**Cómo comprobar que lo hiciste bien.** Este comando debe mostrar exactamente esos dos roles, ni más ni menos:
+
+```bash
+gcloud projects get-iam-policy TU_PROYECTO \
+  --flatten="bindings[].members" \
+  --filter="bindings.members:vdrestrepot@unal.edu.co" \
+  --format="value(bindings.role)"
+```
+
+**Qué va a pasar con tu proyecto.** Cuando termine la evaluación, el evaluador **borrará el proyecto
+entero** con el rol `projectDeleter`. No guardes ahí nada que quieras conservar. Google mantiene un proyecto
+borrado durante 30 días antes de eliminarlo definitivamente, y deja de cobrarte desde el momento del
+borrado.
+
+**Dale el acceso *antes* de entregar.** Sin estos permisos no se puede evaluar tu despliegue.
+
+---
+
+## 6. Correrlo en tu máquina
 
 ```bash
 # PostgreSQL local
@@ -192,7 +230,7 @@ ruff check app/
 
 ---
 
-## 6. Cómo se evalúa
+## 7. Cómo se evalúa
 
 La evaluación es **automática** y se hace sobre tu repositorio y sobre tu despliegue en funcionamiento. En
 términos generales se revisa que:
@@ -202,6 +240,8 @@ términos generales se revisa que:
 - los secretos estén en Secret Manager y la aplicación los use,
 - las dependencias no tengan vulnerabilidades conocidas graves,
 - toda la infraestructura esté definida en Terraform,
-- el pipeline exista y bloquee los cambios con problemas.
+- el pipeline exista, bloquee los cambios con problemas y su última ejecución en `main` esté en verde,
+- el evaluador tenga **exactamente** los dos roles de la sección 5,
+- `ENTREGA.yaml` esté completo.
 
-Al terminar la evaluación, la infraestructura se destruye.
+Al terminar la evaluación, el proyecto se borra (sección 5).
