@@ -103,7 +103,7 @@ Este es el contrato. **Cómo y dónde lo proporcionas es decisión tuya.**
 | **Instalar** | `pip install -r requirements.txt` | `pip install -r requirements.txt` |
 | **Arrancar** (desde su carpeta) | `uvicorn main:app --host 0.0.0.0 --port $PORT` | `uvicorn main:app --host 0.0.0.0 --port $PORT` |
 | **Python** | 3.11 | 3.11 |
-| **Variables de entorno** | `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `SHARED_SECRET` | `BACKEND_URL`, `SHARED_SECRET` |
+| **Variables de entorno** | `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `SHARED_SECRET` | `BACKEND_URL`, `SHARED_SECRET` |
 | **Base de datos** | PostgreSQL accesible desde el backend | no la usa |
 | **Salud** | `GET /health` → 200 | `GET /health` → 200 |
 
@@ -113,8 +113,8 @@ Notas:
 - **Este repositorio no incluye Dockerfile.** Si la plataforma que elijas necesita contenedores, escribir la
   imagen es parte de tu trabajo; la tabla de arriba te dice cómo arranca cada servicio.
 - `DB_HOST` puede ser un nombre de host o la ruta de un socket Unix (por ejemplo `/cloudsql/...`).
-  Si no la defines, el valor por defecto es `localhost`. Valores por defecto: `DB_PORT` = `5432`, `DB_NAME` y
-  `DB_USER` = `shortener`.
+  Si no la defines, el valor por defecto es `localhost`. Valores por defecto de `DB_NAME` y `DB_USER`:
+  `shortener`.
 - El backend **crea su propia tabla** al arrancar; no necesitas migraciones.
 - `SHARED_SECRET` debe ser **el mismo valor** en el frontend y en el backend.
 - `BACKEND_URL` es la dirección base del backend, por ejemplo `https://mi-backend.example.com`.
@@ -208,11 +208,10 @@ borrado.
 Necesitas Python 3.11, Docker (Docker Desktop en Windows y macOS) y tres terminales. Los comandos cambian
 según tu sistema; en Windows también puedes usar WSL y seguir la versión de Linux.
 
-**Primero, la base de datos** (igual en todos los sistemas). Usa el puerto 5433 para no chocar con un
-PostgreSQL que ya tengas instalado:
+**Primero, la base de datos** (igual en todos los sistemas):
 
 ```text
-docker run -d --name pg -p 5433:5432 -e POSTGRES_USER=shortener -e POSTGRES_PASSWORD=dev -e POSTGRES_DB=shortener postgres:15
+docker run -d --name pg -p 5432:5432 -e POSTGRES_USER=shortener -e POSTGRES_PASSWORD=dev -e POSTGRES_DB=shortener postgres:15
 ```
 
 ### macOS y Linux (bash o zsh)
@@ -223,7 +222,7 @@ pip install -r app/requirements-dev.txt
 
 # Terminal 1 (activa el entorno virtual: source .venv/bin/activate)
 cd app/backend
-DB_PORT=5433 DB_PASSWORD=dev SHARED_SECRET=secreto-local uvicorn main:app --port 8001
+DB_PASSWORD=dev SHARED_SECRET=secreto-local uvicorn main:app --port 8001
 
 # Terminal 2 (activa el entorno virtual otra vez)
 cd app/frontend
@@ -239,7 +238,7 @@ pip install -r app/requirements-dev.txt
 
 # Terminal 1 (activa el entorno virtual: .venv\Scripts\Activate.ps1)
 cd app\backend
-$env:DB_PORT="5433"; $env:DB_PASSWORD="dev"; $env:SHARED_SECRET="secreto-local"
+$env:DB_PASSWORD="dev"; $env:SHARED_SECRET="secreto-local"
 uvicorn main:app --port 8001
 
 # Terminal 2 (activa el entorno virtual otra vez)
