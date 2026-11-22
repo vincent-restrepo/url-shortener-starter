@@ -9,6 +9,15 @@ que ya funciona, y tu trabajo es lo que un equipo de ingeniería haría antes de
 automatizar los cambios con un pipeline.** El resultado debe ser una aplicación funcional, accesible desde
 internet.
 
+Al terminarlo habrás practicado:
+
+- elegir los servicios de Google Cloud adecuados para cada pieza,
+- describir la infraestructura como código con Terraform,
+- gestionar secretos con Secret Manager en lugar de dejarlos en el código,
+- automatizar controles de calidad y de seguridad con GitHub Actions.
+
+**La aplicación ya funciona; tu trabajo es todo lo que la rodea.**
+
 ---
 
 ## 1. Qué recibes
@@ -26,6 +35,13 @@ internet.
 ```
 
 Haz un **fork** de este repositorio. Tu fork es tu entrega.
+
+| Recibes | No recibes (lo haces tú) |
+|---|---|
+| El código del **frontend** y del **backend** | La infraestructura: decides qué servicios de Google Cloud usar |
+| Los tests y las dependencias | El Terraform: va en la carpeta `terraform/`, que llega vacía |
+| Este `README.md` con el contrato de cada servicio | El pipeline de GitHub Actions |
+| Una carpeta `terraform/` y un `ENTREGA.yaml` para completar | Los Dockerfiles, si tu plataforma los necesita |
 
 > ⚠️ GitHub **desactiva GitHub Actions por defecto en los forks**. Entra a la pestaña *Actions* de tu fork
 > y actívalo antes de crear tu pipeline, o no se ejecutará nada.
@@ -147,7 +163,13 @@ una cuenta de GitHub. Para que Terraform pueda actuar en tu nombre, ejecuta una 
    problema, el pipeline debe fallar.** El pipeline *no* necesita desplegar nada en Google Cloud. En tu
    entrega final, la última ejecución en la rama `main` debe estar en verde.
 5. **Darle acceso al evaluador, también con Terraform.** Es obligatorio y tiene su propia sección: la 5.
-6. **Completar `ENTREGA.yaml`** con el ID de tu proyecto y la URL pública del frontend.
+6. **Completar `ENTREGA.yaml`** con el ID de tu proyecto y la URL pública del frontend. Es lo que usa el
+   autocalificador para encontrar tu despliegue:
+
+   ```yaml
+   project_id: mi-proyecto-123       # el ID de tu proyecto de Google Cloud
+   frontend_url: https://...         # la URL pública del frontend
+   ```
 7. **Declarar el uso de IA.** Puedes usar herramientas de IA, pero al final de este `README.md` agrega una
    sección «Uso de IA» que diga qué herramienta usaste y para qué partes del trabajo.
 
@@ -158,9 +180,24 @@ una cuenta de GitHub. Para que Terraform pueda actuar en tu nombre, ejecuta una 
 
 Tu proyecto tiene que **funcionar**: se podrán crear enlaces desde el frontend, abrirlos y ver sus clics.
 
-**Cuida el costo.** Algunos servicios cobran por hora mientras existan (una base de datos Cloud SQL es el
-caso típico). Crea una alerta de presupuesto en tu proyecto y destruye la infraestructura cuando no la
-estés usando.
+### Costos y recomendaciones
+
+Algunos servicios cobran **por hora mientras existan**; una base de datos Cloud SQL es el caso típico. Para
+no llevarte sorpresas:
+
+- Crea una alerta de presupuesto en tu proyecto desde el primer día.
+- Usa el tamaño más pequeño de cada servicio: es un ejercicio, no una carga real.
+- Destruye la infraestructura cuando no la estés usando. Con Terraform es `terraform destroy`, y volver a
+  crearla es repetir el `apply`.
+- Antes de entregar, vuelve a crearla desde cero para comprobar que tu Terraform realmente lo describe todo.
+
+**Tropiezos frecuentes**
+
+- Crear una base de datos tarda varios minutos: aplica la infraestructura una vez y avanza con el pipeline
+  mientras espera.
+- Si no tienes Docker en tu máquina, puedes construir las imágenes con Cloud Build.
+- Si tu pipeline sale en rojo desde el primer día, es normal: el código que recibes trae problemas que tienes
+  que encontrar y arreglar.
 
 ---
 
@@ -271,20 +308,30 @@ ruff check app/
 
 ## 7. Cómo se evalúa
 
-La evaluación es **automática** y se hace sobre tu repositorio y sobre tu despliegue en funcionamiento. En
-términos generales se revisa que:
+La calificación es **automática**: un script revisa tu repositorio y tu despliegue en funcionamiento. No hay
+puntos por elegir un servicio concreto de Google Cloud: cualquier plataforma sirve si la aplicación funciona y
+cumple los requisitos.
 
-- la aplicación funcione desde la URL que entregaste,
-- el repositorio no contenga secretos,
-- los secretos estén en Secret Manager y la aplicación los use,
-- las dependencias no tengan vulnerabilidades conocidas graves,
-- toda la infraestructura esté definida en Terraform,
-- el pipeline exista, bloquee los cambios con problemas y su última ejecución en `main` esté en verde,
-- el evaluador tenga **exactamente** los dos roles de la sección 5,
-- `ENTREGA.yaml` esté completo.
+| Criterio | Cómo se verifica | Puntos |
+|---|---|---:|
+| La aplicación funciona | Desde `frontend_url`: crea un enlace, lo abre (redirección) y comprueba que cuenta los clics | 20 |
+| El repositorio no contiene secretos | Escaneo de secretos del código: los valores originales ya no aparecen | 15 |
+| Dependencias sin la vulnerabilidad conocida | Escaneo de dependencias: ya no aparece la vulnerabilidad que venía en el código | 10 |
+| Secretos en Secret Manager y en uso | Existen, tienen una versión habilitada y el servicio los recibe como secreto, no como texto plano | 15 |
+| Todo en Terraform | `terraform/` con los recursos y *state* remoto en Cloud Storage con lo que existe en el proyecto | 15 |
+| Pipeline | Existe en `.github/workflows/`, revisa estilo, vulnerabilidades y construcción, y su última ejecución en `main` está en verde | 15 |
+| Acceso del evaluador y entrega | Exactamente los dos roles de la sección 5 y `ENTREGA.yaml` completo | 10 |
+| **Total** | | **100** |
 
-Puedes comprobar tu avance cuando quieras con el **autocalificador** de la carpeta `autocalificador/`
-(instrucciones en su `README.md`). Es la misma rúbrica automática: es un piso, y la revisión final puede
-incluir comprobaciones adicionales.
+La forma exacta de comprobar cada criterio puede variar según los servicios que elijas, pero el criterio es el
+mismo para todos.
+
+**Autocalificador.** La carpeta `autocalificador/` es la misma rúbrica automática de la tabla. Córrela cuantas
+veces quieras antes de entregar (las instrucciones están en su `README.md`); lo que marque en rojo es lo que te
+resta puntos.
+
+**Casos que no se muestran.** La evaluación oficial la hace el calificador del profesor, que no se publica y que
+incluye revisiones adicionales a las de la tabla. Sacar 100 en el autocalificador es necesario, pero no
+garantiza la nota final.
 
 Al terminar la evaluación, el proyecto se borra (sección 5).
