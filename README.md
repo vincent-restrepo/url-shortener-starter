@@ -148,6 +148,8 @@ una cuenta de GitHub. Para que Terraform pueda actuar en tu nombre, ejecuta una 
    entrega final, la última ejecución en la rama `main` debe estar en verde.
 5. **Darle acceso al evaluador, también con Terraform.** Es obligatorio y tiene su propia sección: la 5.
 6. **Completar `ENTREGA.yaml`** con el ID de tu proyecto y la URL pública del frontend.
+7. **Declarar el uso de IA.** Puedes usar herramientas de IA, pero al final de este `README.md` agrega una
+   sección «Uso de IA» que diga qué herramienta usaste y para qué partes del trabajo.
 
 > 💡 Al habilitar APIs con Terraform, el primer `terraform apply` puede fallar con un error `403` o
 > `IAM_PERMISSION_DENIED` en el recurso que sigue (por ejemplo, Artifact Registry): el API recién habilitado
