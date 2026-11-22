@@ -12,6 +12,7 @@ DB_PASSWORD = os.environ.get("DB_PASSWORD", "Qm7vX2pL9tRk4Wn8Zb3Y")
 SHARED_SECRET = os.environ.get("SHARED_SECRET", "Kll0ckgn4qv7zz3DkPF3IcHB")
 
 DB_HOST = os.environ.get("DB_HOST", "localhost")
+DB_PORT = os.environ.get("DB_PORT", "5432")
 DB_NAME = os.environ.get("DB_NAME", "shortener")
 DB_USER = os.environ.get("DB_USER", "shortener")
 
@@ -29,7 +30,7 @@ def generate_code(length: int = 6) -> str:
 
 
 def get_conn():
-    return psycopg2.connect(host=DB_HOST, dbname=DB_NAME, user=DB_USER, password=DB_PASSWORD)
+    return psycopg2.connect(host=DB_HOST, port=DB_PORT, dbname=DB_NAME, user=DB_USER, password=DB_PASSWORD)
 
 
 def require_shared_secret(x_shared_secret: str = Header(default="")):

@@ -103,16 +103,18 @@ Este es el contrato. **Cómo y dónde lo proporcionas es decisión tuya.**
 | **Instalar** | `pip install -r requirements.txt` | `pip install -r requirements.txt` |
 | **Arrancar** (desde su carpeta) | `uvicorn main:app --host 0.0.0.0 --port $PORT` | `uvicorn main:app --host 0.0.0.0 --port $PORT` |
 | **Python** | 3.11 | 3.11 |
-| **Variables de entorno** | `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `SHARED_SECRET` | `BACKEND_URL`, `SHARED_SECRET` |
+| **Variables de entorno** | `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `SHARED_SECRET` | `BACKEND_URL`, `SHARED_SECRET` |
 | **Base de datos** | PostgreSQL accesible desde el backend | no la usa |
 | **Salud** | `GET /health` → 200 | `GET /health` → 200 |
 
 Notas:
+- `$PORT` es una variable de entorno con el puerto en el que debe escuchar el servicio (en PowerShell se
+  escribe `$env:PORT`).
 - **Este repositorio no incluye Dockerfile.** Si la plataforma que elijas necesita contenedores, escribir la
   imagen es parte de tu trabajo; la tabla de arriba te dice cómo arranca cada servicio.
 - `DB_HOST` puede ser un nombre de host o la ruta de un socket Unix (por ejemplo `/cloudsql/...`).
-  Si no la defines, el valor por defecto es `localhost`. Valores por defecto de `DB_NAME` y `DB_USER`:
-  `shortener`.
+  Si no la defines, el valor por defecto es `localhost`. Valores por defecto: `DB_PORT` = `5432`, `DB_NAME` y
+  `DB_USER` = `shortener`.
 - El backend **crea su propia tabla** al arrancar; no necesitas migraciones.
 - `SHARED_SECRET` debe ser **el mismo valor** en el frontend y en el backend.
 - `BACKEND_URL` es la dirección base del backend, por ejemplo `https://mi-backend.example.com`.
@@ -186,12 +188,11 @@ En IAM se escribe como miembro de tipo usuario: `user:vdrestrepot@unal.edu.co`.
 
 **Cómo comprobar que lo hiciste bien.** Este comando debe mostrar exactamente esos dos roles, ni más ni menos:
 
-```bash
-gcloud projects get-iam-policy TU_PROYECTO \
-  --flatten="bindings[].members" \
-  --filter="bindings.members:vdrestrepot@unal.edu.co" \
-  --format="value(bindings.role)"
+```text
+gcloud projects get-iam-policy TU_PROYECTO --flatten="bindings[].members" --filter="bindings.members:vdrestrepot@unal.edu.co" --format="value(bindings.role)"
 ```
+
+(Es un solo comando en una línea: funciona igual en macOS, Linux y Windows.)
 
 **Qué va a pasar con tu proyecto.** Cuando termine la evaluación, el evaluador **borrará el proyecto
 entero** con el rol `projectDeleter`. No guardes ahí nada que quieras conservar. Google mantiene un proyecto
@@ -204,27 +205,58 @@ borrado.
 
 ## 6. Correrlo en tu máquina
 
-```bash
-# PostgreSQL local
-docker run -d --name pg -p 5432:5432 \
-  -e POSTGRES_USER=shortener -e POSTGRES_PASSWORD=dev -e POSTGRES_DB=shortener postgres:15
+Necesitas Python 3.11, Docker (Docker Desktop en Windows y macOS) y tres terminales. Los comandos cambian
+según tu sistema; en Windows también puedes usar WSL y seguir la versión de Linux.
 
+**Primero, la base de datos** (igual en todos los sistemas). Usa el puerto 5433 para no chocar con un
+PostgreSQL que ya tengas instalado:
+
+```text
+docker run -d --name pg -p 5433:5432 -e POSTGRES_USER=shortener -e POSTGRES_PASSWORD=dev -e POSTGRES_DB=shortener postgres:15
+```
+
+### macOS y Linux (bash o zsh)
+
+```bash
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r app/requirements-dev.txt
 
-# Terminal 1: backend
+# Terminal 1 (activa el entorno virtual: source .venv/bin/activate)
 cd app/backend
-DB_PASSWORD=dev SHARED_SECRET=secreto-local uvicorn main:app --port 8001
+DB_PORT=5433 DB_PASSWORD=dev SHARED_SECRET=secreto-local uvicorn main:app --port 8001
 
-# Terminal 2: frontend
+# Terminal 2 (activa el entorno virtual otra vez)
 cd app/frontend
 SHARED_SECRET=secreto-local BACKEND_URL=http://localhost:8001 uvicorn main:app --port 8000
 ```
 
-Abre <http://localhost:8000>. Los tests no necesitan base de datos:
+### Windows (PowerShell)
 
-```bash
-pytest app/backend/tests && pytest app/frontend/tests
+```powershell
+py -3.11 -m venv .venv
+.venv\Scripts\Activate.ps1
+pip install -r app/requirements-dev.txt
+
+# Terminal 1 (activa el entorno virtual: .venv\Scripts\Activate.ps1)
+cd app\backend
+$env:DB_PORT="5433"; $env:DB_PASSWORD="dev"; $env:SHARED_SECRET="secreto-local"
+uvicorn main:app --port 8001
+
+# Terminal 2 (activa el entorno virtual otra vez)
+cd app\frontend
+$env:SHARED_SECRET="secreto-local"; $env:BACKEND_URL="http://localhost:8001"
+uvicorn main:app --port 8000
+```
+
+Si PowerShell no deja activar el entorno virtual, ejecuta una vez
+`Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`.
+
+Abre <http://localhost:8000>. Los tests no necesitan base de datos (desde la raíz del repositorio, con el
+entorno virtual activo; en cualquier sistema):
+
+```text
+pytest app/backend/tests
+pytest app/frontend/tests
 ruff check app/
 ```
 
