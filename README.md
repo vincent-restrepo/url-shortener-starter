@@ -19,6 +19,7 @@ internet.
 │   ├── backend/         # API REST + acceso a PostgreSQL
 │   ├── frontend/        # página web + reenvío de las llamadas al backend
 │   └── requirements-dev.txt
+├── autocalificador/     # la rúbrica automática, para que te autocorrijas antes de entregar
 ├── terraform/           # aquí va TODO tu Terraform
 ├── ENTREGA.yaml         # los datos de tu despliegue, para el autocalificador
 └── README.md
@@ -279,5 +280,9 @@ términos generales se revisa que:
 - el pipeline exista, bloquee los cambios con problemas y su última ejecución en `main` esté en verde,
 - el evaluador tenga **exactamente** los dos roles de la sección 5,
 - `ENTREGA.yaml` esté completo.
+
+Puedes comprobar tu avance cuando quieras con el **autocalificador** de la carpeta `autocalificador/`
+(instrucciones en su `README.md`). Es la misma rúbrica automática: es un piso, y la revisión final puede
+incluir comprobaciones adicionales.
 
 Al terminar la evaluación, el proyecto se borra (sección 5).
