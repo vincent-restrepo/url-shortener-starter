@@ -148,6 +148,11 @@ una cuenta de GitHub. Para que Terraform pueda actuar en tu nombre, ejecuta una 
 5. **Darle acceso al evaluador, también con Terraform.** Es obligatorio y tiene su propia sección: la 5.
 6. **Completar `ENTREGA.yaml`** con el ID de tu proyecto y la URL pública del frontend.
 
+> 💡 Al habilitar APIs con Terraform, el primer `terraform apply` puede fallar con un error `403` o
+> `IAM_PERMISSION_DENIED` en el recurso que sigue (por ejemplo, Artifact Registry): el API recién habilitado
+> tarda unos segundos en propagarse. No es un error de tu código; espera un minuto y vuelve a ejecutar
+> `terraform apply`. Si defines `depends_on` hacia el recurso que habilita el API, ocurre menos.
+
 Tu proyecto tiene que **funcionar**: se podrán crear enlaces desde el frontend, abrirlos y ver sus clics.
 
 **Cuida el costo.** Algunos servicios cobran por hora mientras existan (una base de datos Cloud SQL es el
